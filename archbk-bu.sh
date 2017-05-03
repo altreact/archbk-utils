@@ -78,8 +78,18 @@ EOF
   mkdir root 2> /dev/null 1>&2
   mount /dev/$p2 root/
 
+  echo
+  echo "$step) rsyncing rootfs to target device"
+  step="$(expr $step + 1)"
   # rsync backup to target device
-  
+  (rsync -aAXv --exclude={"/dev/*","/home/*/.thumbnails/*","/home/*/.cache/*","/home/*/.gvfs","/home/*/.local/share/Trash/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} / root) &
+	spinner $!
+
+  # add root partition UUID to /etc/fstab
+  if [ "$(cat root/etc/fstab | grep "$fstab_entry")" != $fstab_entry ]; then
+    echo "$fstab_entry" >> root/etc/fstab 
+  fi
+
   echo
   echo "$step) writing kernel image to target device kernel partition"
   step="$(expr $step + 1)"
@@ -119,7 +129,7 @@ init () {
 
   have_prog () {
     $($1 2>fail.txt 1>/dev/null)
-    res="$(cat fail.txt 2>/dev/null | sed "s/\n//g" 2>/dev/nul    l | sed 's/ //g')"
+    res="$(cat fail.txt 2>/dev/null | sed "s/\n//g" 2>/dev/null | sed 's/ //g')"
     rm fail.txt
 
     if [ $res 2>/dev/null ]; then
@@ -208,6 +218,10 @@ init () {
   
   KERNEL_SIZE="$(fdisk -l /dev/$kpart | grep '[0-9] sectors' | awk '{print $7}')"
   KERNEL_BEGINNING_SECTOR='8192'
+
+  uuid="$(lsblk -no UUID /dev/$p2)"
+
+  fstab_entry="$uuid  /  ext4  defaults  0  1"
  
 }
 
