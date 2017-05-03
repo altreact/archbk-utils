@@ -36,7 +36,7 @@ backup_archbk () {
   read -p "do you want to continue with this backup? [y/N] : " a
   if [ $a ]; then
     if [ $a = 'n' ]; then
-      exit 5
+      exit 6
     fi
   else
     continue
@@ -117,6 +117,35 @@ init () {
 
   }
 
+  have_prog () {
+    $($1 2>fail.txt 1>/dev/null)
+    res="$(cat fail.txt 2>/dev/null | sed "s/\n//g" 2>/dev/nul    l | sed 's/ //g')"
+    rm fail.txt
+
+    if [ $res 2>/dev/null ]; then
+    $(echo "$1" >> fail.res)
+    fi
+  }
+
+   # check system for needed programs   
+   have_prog sed 
+   have_prog grep 
+   have_prog lsblk 
+   have_prog wget 
+   have_prog cgpt 
+   
+   # prompt user to install needed programs 
+   # then exit  
+   if [ -e fail.res ]; then 
+     echo 
+     echo "install" 
+     cat fail.res 
+     echo "then run this script again" 
+     echo 
+     rm fail.res 
+     exit 1 
+   fi
+
   # if script wasn't ran as root, quit
   if [ "$(whoami)" != 'root' ]; then
     echo
@@ -124,15 +153,16 @@ init () {
     echo
     echo 'try "sudo sh archbk-bu"'
     echo
-    exit 1
+    exit 2
   fi
+
 
   # if one arg wasn't entered, quit  
   if [ ! $1 ]; then
     echo
     echo 'no backup device entered'
     echo
-    exit 2
+    exit 3
   fi
 
   # if entered arg isn't a valid device, quit
@@ -140,7 +170,7 @@ init () {
     echo
     echo 'invalid backup device'
     echo
-    exit 3
+    exit 4
   fi
 
   # get get device names for root device and user entered backup device
@@ -153,7 +183,7 @@ init () {
     echo
     echo 'backup device cannot be the same as root device'
     echo
-    exit 4
+    exit 5
   fi
   
   # initialize $media as $budev
