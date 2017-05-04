@@ -86,9 +86,10 @@ EOF
 	spinner $!
 
   # add root partition UUID to /etc/fstab
-  if [ "$(cat root/etc/fstab | grep "$fstab_entry")" != $fstab_entry ]; then
-    echo "$fstab_entry" >> root/etc/fstab 
-  fi
+  
+  uuid="$(lsblk -no UUID /dev/$p2)"
+  fstab_entry="$uuid  /  ext4  defaults  0  1"
+  echo "$fstab_entry" >> root/etc/fstab 
 
   echo
   echo "$step) writing kernel image to target device kernel partition"
@@ -219,10 +220,6 @@ init () {
   KERNEL_SIZE="$(fdisk -l /dev/$kpart | grep '[0-9] sectors' | awk '{print $7}')"
   KERNEL_BEGINNING_SECTOR='8192'
 
-  uuid="$(lsblk -no UUID /dev/$p2)"
-
-  fstab_entry="$uuid  /  ext4  defaults  0  1"
- 
 }
 
 main () {
