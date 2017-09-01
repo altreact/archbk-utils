@@ -143,18 +143,18 @@ init () {
    have_prog grep 
    have_prog lsblk 
    have_prog wget 
-   have_prog cgpt 
+   have_prog cgpt
+   have_prog rsync
    
    # prompt user to install needed programs 
    # then exit  
    if [ -e fail.res ]; then 
-     echo 
-     echo "install" 
-     cat fail.res 
-     echo "then run this script again" 
-     echo 
-     rm fail.res 
-     exit 1 
+     pac="sudo pacman -S"
+     while read p;
+     do
+       pac="$pac $p"
+     done
+       "$($pac)"  
    fi
 
   # if script wasn't ran as root, quit
